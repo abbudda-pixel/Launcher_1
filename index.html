@@ -434,3 +434,244 @@
     .work-link:hover {
       border-color: var(--accent);
 
+color: var(--accent);
+}
+.hidden { display: none !important; }
+/* Toast notification */
+.toast {
+position: fixed;
+bottom: 20px;
+right: 20px;
+background: var(--surface-hover);
+border: 1px solid var(--accent);
+color: var(--text);
+padding: 10px 16px;
+border-radius: 8px;
+font-size: 13px;
+opacity: 0;
+transform: translateY(10px);
+transition: all 0.2s ease;
+pointer-events: none;
+z-index: 100;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+@media (max-width: 600px) {
+body { padding: 18px 14px 50px; }
+.apps-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+.app-card { padding: 10px; }
+.kbd-hint { display: none; }
+}
+
+
+
+ЗАГРУЗКА...
+Рабочее пространство
+Дашборд и API
+Портфолио
+
+/
+Приложения и веб-сервисы
+
+Коллекции API и ключи доступа
+
+
+
+Рабочие API и документация
+
+Локальный сейф API-ключей
+
+
+Ключи сохраняются только в localStorage этого браузера и не попадают в код на GitHub.
+
+
+
+
+Сохранить
+
+
+
+
+Избранные проекты и кейсы
+
+
+Скопировано в буфер обмена
+// =========================================================
+// 1. НАСТРОЙКИ ВАШИХ ПРИЛОЖЕНИЙ, API И ПОРТФОЛИО
+// Редактируйте этот блок прямо на GitHub под свои задачи
+// =========================================================
+const CONFIG = {
+apps: [
+{ name: "GitHub", desc: "Репозитории и Pages", url: "https://github.com", icon: "jsdelivr.net" },
+{ name: "Google AI Studio", desc: "Тестирование моделей и API", url: "google.com", icon: "jsdelivr.net" },
+{ name: "Telegram", desc: "Запуск клиента", url: "tg://resolve", icon: "jsdelivr.net" },
+{ name: "Google Таблицы", desc: "Журналы и базы", url: "google.com", icon: "jsdelivr.net" },
+{ name: "Miro", desc: "Схемы и фреймворки", url: "https://miro.com", icon: "jsdelivr.net" },
+{ name: "Postman Web", desc: "Запросы к API", url: "postman.co", icon: "jsdelivr.net" }
+],
+apis: [
+{ method: "DOCS", title: "Gemini API Reference", url: "google.dev", copyText: "googleapis.com" },
+{ method: "POST", title: "Telegram Bot SendMessage", url: "telegram.org", copyText: "telegram.org" },
+{ method: "GET", title: "GitHub REST API User", url: "github.com", copyText: "github.com" },
+{ method: "DOCS", title: "Google Apps Script WebApp", url: "google.com", copyText: "google.com/macros/s/DEPLOYMENT_ID/exec" }
+],
+portfolio: [
+{
+title: "ИИ-агент мониторинга изменений сайтов",
+desc: "Автоматический трекинг обновлений лендингов с фиксацией истории и отчётами в Google Таблицы.",
+tags: ["AI Agent", "Google Apps Script", "Automation"],
+url: "https://github.com",
+cover: "" // Можно вставить ссылку на скриншот проекта
+},
+{
+title: "Продюсирование делового форума",
+desc: "Архитектура программы, спикерский трек, интерактивные форматы и цифровая навигация участников.",
+tags: ["Event Production", "B2B", "Стратегия"],
+url: "https://github.com",
+cover: ""
+},
+{
+title: "Интерактивный веб-дашборд",
+desc: "Единый центр запуска браузерных инструментов, API-коллекций и презентации кейсов.",
+tags: ["HTML/JS", "UI/UX", "GitHub Pages"],
+url: "https://github.com",
+cover: ""
+}
+]
+};
+// =========================================================
+// 2. ЛОГИКА ИНТЕРФЕЙСА (ЧАСЫ, ВКЛАДКИ, ПОИСК, СЕЙФ КЛЮЧЕЙ)
+// =========================================================
+function updateClock() {
+const now = new Date();
+const hour = now.getHours();
+let greet = "Добрый вечер";
+if (hour >= 5 && hour < 12) greet = "Доброе утро";
+else if (hour >= 12 && hour < 18) greet = "Добрый день";
+const options = { weekday: "long", day: "numeric", month: "long" };
+const dateStr = now.toLocaleDateString("ru-RU", options);
+const timeStr = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+document.getElementById("dateDisplay").textContent = ${dateStr} • ${timeStr};
+document.getElementById("greetingDisplay").textContent = greet;
+}
+updateClock();
+setInterval(updateClock, 15000);
+function showToast(msg) {
+const toast = document.getElementById("toast");
+toast.textContent = msg;
+toast.classList.add("show");
+setTimeout(() => toast.classList.remove("show"), 2000);
+}
+function copyText(text, label = "Скопировано") {
+navigator.clipboard.writeText(text).then(() => showToast(label));
+}
+// Рендер приложений
+function renderApps(filter = "") {
+const container = document.getElementById("appsContainer");
+const q = filter.toLowerCase();
+const filtered = CONFIG.apps.filter(a =>
+a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.url.toLowerCase().includes(q)
+);
+container.innerHTML = filtered.map(app => <a class="app-card" href="${app.url}" target="${app.url.startsWith('http') ? '_blank' : '_self'}" rel="noopener"> <div class="app-icon"> ${app.icon ?: app.name[0]} </div> <div class="app-info"> <div class="app-name">${app.name}</div> <div class="app-desc">${app.desc}</div> </div> </a>).join("");
+}
+
+// Рендер API
+function renderApis(filter = "") {
+const container = document.getElementById("apiContainer");
+const q = filter.toLowerCase();
+const filtered = CONFIG.apis.filter(item =>
+item.title.toLowerCase().includes(q) || item.copyText.toLowerCase().includes(q) || item.method.toLowerCase().includes(q)
+);
+
+container.innerHTML = filtered.map(item => <div class="api-item"> <div class="api-left"> <span class="method ${item.method}">${item.method}</span> <div class="api-meta"> <a class="api-title" href="${item.url}" target="_blank" rel="noopener">${item.title}</a> <div class="api-url">${item.copyText}</div> </div> </div> <button class="btn-small" onclick="copyText('${item.copyText.replace(/'/g, "\\'")}', 'Эндпоинт скопирован')">Копия</button> </div>).join("");
+}
+// Локальный сейф ключей (localStorage)
+const STORAGE_KEY = "flame_personal_api_vault_v1";
+function getVault() {
+try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+catch { return []; }
+}
+function saveVault(list) {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+renderVault();
+}
+
+function renderVault(filter = "") {
+const container = document.getElementById("vaultList");
+const q = filter.toLowerCase();
+const list = getVault().filter(k => k.name.toLowerCase().includes(q));
+if (!list.length) {
+container.innerHTML = <div style="font-size:12px;color:var(--text-muted);padding:6px 0;">Сохранённых ключей пока нет.</div>;
+return;
+}
+container.innerHTML = list.map((item, idx) => {
+const masked = item.value.length > 8
+? item.value.slice(0, 4) + "••••••••" + item.value.slice(-4)
+: "••••••••";
+return <div class="api-item"> <div class="api-meta"> <div class="api-title">${item.name}</div> <div class="api-url">${masked}</div> </div> <div style="display:flex;gap:6px;"> <button class="btn-small" onclick="copyVaultKey(${idx})">Ключ</button> <button class="btn-small" onclick="deleteVaultKey(${idx})" title="Удалить">✕</button> </div> </div>;
+}).join("");
+}
+
+window.copyVaultKey = function(idx) {
+const list = getVault();
+if (list[idx]) copyText(list[idx].value, Ключ «${list[idx].name}» скопирован);
+};
+window.deleteVaultKey = function(idx) {
+const list = getVault();
+list.splice(idx, 1);
+saveVault(list);
+showToast("Ключ удалён из браузера");
+};
+document.getElementById("vaultForm").addEventListener("submit", e => {
+e.preventDefault();
+const name = document.getElementById("keyName").value.trim();
+const value = document.getElementById("keyValue").value.trim();
+if (!name || !value) return;
+const list = getVault();
+list.push({ name, value });
+saveVault(list);
+e.target.reset();
+showToast("Ключ сохранён локально");
+});
+// Рендер Портфолио
+function renderPortfolio(filter = "") {
+const container = document.getElementById("portfolioContainer");
+const q = filter.toLowerCase();
+const filtered = CONFIG.portfolio.filter(p =>
+p.title.toLowerCase().includes(q) ||
+p.desc.toLowerCase().includes(q) ||
+p.tags.some(t => t.toLowerCase().includes(q))
+);
+container.innerHTML = filtered.map(work => <article class="work-card"> <div class="work-cover" style="${work.cover ?background-image:url('${work.cover}'): ''}"> ${work.cover ? '' : 'ПРЕВЬЮ ПРОЕКТА'} </div> <div class="work-body"> <div class="work-tags"> ${work.tags.map(t =>${t}).join("")} </div> <h3 class="work-title">${work.title}</h3> <p class="work-desc">${work.desc}</p> <a class="work-link" href="${work.url}" target="_blank" rel="noopener">Открыть проект →</a> </div> </article> ).join("");
+}
+
+// Переключение вкладок
+document.querySelectorAll(".tab-btn").forEach(btn => {
+btn.addEventListener("click", () => {
+document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+btn.classList.add("active");
+const target = btn.dataset.tab;
+document.getElementById("tab-dashboard").classList.toggle("hidden", target !== "dashboard");
+document.getElementById("tab-portfolio").classList.toggle("hidden", target !== "portfolio");
+});
+});
+// Поиск в реальном времени и горячая клавиша "/"
+const searchInput = document.getElementById("searchInput");
+searchInput.addEventListener("input", e => {
+const val = e.target.value;
+renderApps(val);
+renderApis(val);
+renderVault(val);
+renderPortfolio(val);
+});
+document.addEventListener("keydown", e => {
+if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+e.preventDefault();
+searchInput.focus();
+}
+});
+
+// Первый запуск
+renderApps();
+renderApis();
+renderVault();
+renderPortfolio();

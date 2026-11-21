@@ -1,677 +1,112 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Workspace & Portfolio</title>
-  <style>
-    :root {
-      --bg: #111317;
-      --surface: #181b21;
-      --surface-hover: #21252e;
-      --border: #282d37;
-      --text: #e6e8ec;
-      --text-muted: #8b92a2;
-      --accent: #e06c75;
-      --accent-soft: rgba(224, 108, 117, 0.14);
-      --green: #98c379;
-      --blue: #61afef;
-      --yellow: #e5c07b;
-      --radius: 10px;
-      --font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
-      --mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-      line-height: 1.5;
-      min-height: 100vh;
-      padding: 28px 20px 60px;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .container {
-      max-width: 1160px;
-      margin: 0 auto;
-    }
-
-    /* Header (Flame Style) */
-    header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 16px;
-      padding-bottom: 22px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-    }
-
-    .clock-block .date {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1.4px;
-      color: var(--accent);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .clock-block h1 {
-      font-size: clamp(24px, 4vw, 34px);
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: 8px;
-      background: var(--surface);
-      padding: 4px;
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px 16px;
-      border-radius: 7px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .tab-btn:hover { color: var(--text); }
-    .tab-btn.active {
-      background: var(--surface-hover);
-      color: var(--text);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-
-    /* Search Bar */
-    .search-wrap {
-      position: relative;
-      margin-bottom: 30px;
-    }
-
-    .search-input {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 13px 44px 13px 16px;
-      color: var(--text);
-      font-size: 15px;
-      outline: none;
-      transition: border-color 0.15s ease;
-    }
-
-    .search-input:focus { border-color: var(--accent); }
-    .search-input::placeholder { color: var(--text-muted); }
-
-    .kbd-hint {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text-muted);
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 2px 7px;
-      border-radius: 5px;
-      pointer-events: none;
-    }
-
-    /* Section Headings */
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 14px;
-      margin-top: 28px;
-    }
-
-    .section-header:first-child { margin-top: 0; }
-
-    .section-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted);
-      font-weight: 700;
-    }
-
-    /* Applications Grid (Flame Tiles) */
-    .apps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
-      gap: 12px;
-    }
-
-    .app-card {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 13px 14px;
-      text-decoration: none;
-      color: var(--text);
-      transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .app-card:hover {
-      background: var(--surface-hover);
-      border-color: #3a4150;
-      transform: translateY(-2px);
-    }
-
-    .app-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 15px;
-      flex-shrink: 0;
-    }
-
-    .app-icon img {
-      width: 22px;
-      height: 22px;
-      object-fit: contain;
-    }
-
-    .app-info { min-width: 0; }
-    .app-name {
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .app-desc {
-      font-size: 12px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* API Collections & Bookmarks */
-    .columns-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-
-    .panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-    }
-
-    .panel-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--text);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .api-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 10px;
-      border-radius: 7px;
-      background: var(--bg);
-      border: 1px solid transparent;
-      margin-bottom: 8px;
-    }
-
-    .api-item:last-child { margin-bottom: 0; }
-    .api-item:hover { border-color: var(--border); }
-
-    .api-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 0;
-    }
-
-    .method {
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .GET { background: rgba(152, 195, 121, 0.15); color: var(--green); }
-    .POST { background: rgba(97, 175, 239, 0.15); color: var(--blue); }
-    .DOCS { background: rgba(229, 192, 123, 0.15); color: var(--yellow); }
-
-    .api-meta { min-width: 0; }
-    .api-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-      text-decoration: none;
-      display: block;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .api-title:hover { color: var(--accent); }
-
-    .api-url {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .btn-small {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 11px;
-      padding: 5px 9px;
-      border-radius: 6px;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: all 0.15s ease;
-    }
-
-    .btn-small:hover {
-      color: var(--text);
-      border-color: var(--accent);
-    }
-
-    /* API Keys Vault (Local Browser Storage) */
-    .vault-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .vault-input {
-      flex: 1 1 130px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 10px;
-      color: var(--text);
-      font-size: 12px;
-      font-family: var(--mono);
-      outline: none;
-    }
-
-    .vault-input:focus { border-color: var(--accent); }
-
-    .btn-accent {
-      background: var(--accent);
-      color: #111317;
-      border: none;
-      font-weight: 600;
-      font-size: 12px;
-      padding: 7px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .vault-note {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-bottom: 10px;
-    }
-
-    /* Portfolio Tab */
-    .portfolio-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-      gap: 18px;
-    }
-
-    .work-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-
-    .work-card:hover {
-      transform: translateY(-3px);
-      border-color: #3a4150;
-    }
-
-    .work-cover {
-      height: 150px;
-      background: linear-gradient(135deg, #1f2430 0%, #2a2129 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 13px;
-      border-bottom: 1px solid var(--border);
-      background-size: cover;
-      background-position: center;
-    }
-
-    .work-body {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    .work-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .tag {
-      font-size: 11px;
-      background: var(--bg);
-      color: var(--accent);
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-    }
-
-    .work-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    .work-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      flex: 1;
-    }
-
-    .work-link {
-      display: inline-block;
-      text-align: center;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      text-decoration: none;
-      padding: 8px 12px;
-      border-radius: 7px;
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .work-link:hover {
-      border-color: var(--accent);
-
-color: var(--accent);
-}
-.hidden { display: none !important; }
-/* Toast notification */
-.toast {
-position: fixed;
-bottom: 20px;
-right: 20px;
-background: var(--surface-hover);
-border: 1px solid var(--accent);
-color: var(--text);
-padding: 10px 16px;
-border-radius: 8px;
-font-size: 13px;
-opacity: 0;
-transform: translateY(10px);
-transition: all 0.2s ease;
-pointer-events: none;
-z-index: 100;
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-@media (max-width: 600px) {
-body { padding: 18px 14px 50px; }
-.apps-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
-.app-card { padding: 10px; }
-.kbd-hint { display: none; }
-}
-
-
-
-ЗАГРУЗКА...
-Рабочее пространство
-Дашборд и API
-Портфолио
-
-/
-Приложения и веб-сервисы
-
-Коллекции API и ключи доступа
-
-
-
-Рабочие API и документация
-
-Локальный сейф API-ключей
-
-
-Ключи сохраняются только в localStorage этого браузера и не попадают в код на GitHub.
-
-
-
-
-Сохранить
-
-
-
-
-Избранные проекты и кейсы
-
-
-Скопировано в буфер обмена
-// =========================================================
-// 1. НАСТРОЙКИ ВАШИХ ПРИЛОЖЕНИЙ, API И ПОРТФОЛИО
-// Редактируйте этот блок прямо на GitHub под свои задачи
-// =========================================================
-const CONFIG = {
-apps: [
-{ name: "GitHub", desc: "Репозитории и Pages", url: "https://github.com", icon: "jsdelivr.net" },
-{ name: "Google AI Studio", desc: "Тестирование моделей и API", url: "google.com", icon: "jsdelivr.net" },
-{ name: "Telegram", desc: "Запуск клиента", url: "tg://resolve", icon: "jsdelivr.net" },
-{ name: "Google Таблицы", desc: "Журналы и базы", url: "google.com", icon: "jsdelivr.net" },
-{ name: "Miro", desc: "Схемы и фреймворки", url: "https://miro.com", icon: "jsdelivr.net" },
-{ name: "Postman Web", desc: "Запросы к API", url: "postman.co", icon: "jsdelivr.net" }
-],
-apis: [
-{ method: "DOCS", title: "Gemini API Reference", url: "google.dev", copyText: "googleapis.com" },
-{ method: "POST", title: "Telegram Bot SendMessage", url: "telegram.org", copyText: "telegram.org" },
-{ method: "GET", title: "GitHub REST API User", url: "github.com", copyText: "github.com" },
-{ method: "DOCS", title: "Google Apps Script WebApp", url: "google.com", copyText: "google.com/macros/s/DEPLOYMENT_ID/exec" }
-],
-portfolio: [
-{
-title: "ИИ-агент мониторинга изменений сайтов",
-desc: "Автоматический трекинг обновлений лендингов с фиксацией истории и отчётами в Google Таблицы.",
-tags: ["AI Agent", "Google Apps Script", "Automation"],
-url: "https://github.com",
-cover: "" // Можно вставить ссылку на скриншот проекта
-},
-{
-title: "Продюсирование делового форума",
-desc: "Архитектура программы, спикерский трек, интерактивные форматы и цифровая навигация участников.",
-tags: ["Event Production", "B2B", "Стратегия"],
-url: "https://github.com",
-cover: ""
-},
-{
-title: "Интерактивный веб-дашборд",
-desc: "Единый центр запуска браузерных инструментов, API-коллекций и презентации кейсов.",
-tags: ["HTML/JS", "UI/UX", "GitHub Pages"],
-url: "https://github.com",
-cover: ""
-}
-]
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workspace</title>
+<style>
+:root{--bg:#111317;--s:#181b21;--sh:#21252e;--b:#282d37;--t:#e6e8ec;--m:#8b92a2;--a:#e06c75;--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:24px 16px 50px}
+.w{max-width:1100px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--b);margin-bottom:20px}
+.dt{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--a);font-weight:700}
+h1{font-size:28px;font-weight:700}
+.tabs{display:flex;gap:6px;background:var(--s);padding:4px;border-radius:var(--r);border:1px solid var(--b)}
+.tab{background:none;border:none;color:var(--m);padding:7px 14px;border-radius:7px;cursor:pointer;font-weight:500}
+.tab.on{background:var(--sh);color:var(--t)}
+.srch{width:100%;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px 14px;color:var(--t);font-size:15px;margin-bottom:24px;outline:none}
+.srch:focus{border-color:var(--a)}
+.sec{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--m);font-weight:700;margin:22px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.card{display:flex;align-items:center;gap:10px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px;text-decoration:none;color:var(--t);transition:.15s}
+.card:hover{background:var(--sh);border-color:#3a4150;transform:translateY(-2px)}
+.ico{width:34px;height:34px;border-radius:8px;background:rgba(224,108,117,.14);color:var(--a);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
+.ico img{width:20px;height:20px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.box{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;background:var(--bg);border-radius:7px;margin-bottom:7px}
+.mth{font:700 10px monospace;padding:2px 6px;border-radius:4px;background:rgba(97,175,239,.15);color:#61afef}
+.btn{background:var(--s);border:1px solid var(--b);color:var(--m);font-size:11px;padding:4px 8px;border-radius:5px;cursor:pointer}
+.btn:hover{color:var(--t);border-color:var(--a)}
+.vf{display:flex;gap:6px;margin:8px 0 10px}
+.vf input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--b);border-radius:6px;padding:6px 8px;color:var(--t);font-size:12px}
+.vf button{background:var(--a);color:#111;border:none;font-weight:600;padding:6px 12px;border-radius:6px;cursor:pointer}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.wcard{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px}
+.tag{font-size:11px;background:var(--bg);color:var(--a);padding:2px 7px;border-radius:4px;border:1px solid var(--b);margin-right:5px}
+.hide{display:none!important}
+.toast{position:fixed;bottom:18px;right:18px;background:var(--sh);border:1px solid var(--a);padding:9px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
+.toast.on{opacity:1}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="w">
+  <header>
+    <div><div class="dt" id="dt"></div><h1 id="gr">Workspace</h1></div>
+    <div class="tabs">
+      <button class="tab on" onclick="sw('d',this)">Дашборд и API</button>
+      <button class="tab" onclick="sw('p',this)">Портфолио</button>
+    </div>
+  </header>
+  <input class="srch" id="q" placeholder="Поиск по приложениям, API и проектам (нажмите /)">
+  <div id="d">
+    <div class="sec">Приложения и сервисы</div>
+    <div class="grid" id="apps"></div>
+    <div class="sec">API-коллекции и локальный сейф ключей</div>
+    <div class="cols">
+      <div class="box"><div id="apis"></div></div>
+      <div class="box">
+        <div style="font-size:12px;color:var(--m)">Ключи хранятся только в памяти этого браузера:</div>
+        <form class="vf" id="vf"><input id="kn" placeholder="Сервис" required><input id="kv" type="password" placeholder="API-ключ" required><button>+</button></form>
+        <div id="vl"></div>
+      </div>
+    </div>
+  </div>
+  <div id="p" class="hide">
+    <div class="sec">Избранные работы</div>
+    <div class="pgrid" id="port"></div>
+  </div>
+</div>
+<div class="toast" id="ts">Скопировано</div>
+<script>
+const CFG={
+  apps:[
+    {n:"GitHub",d:"Репозитории",u:"https://github.com",i:"https://jsdelivr.net"},
+    {n:"AI Studio",d:"Модели и API",u:"https://google.com",i:"https://jsdelivr.net"},
+    {n:"Telegram",d:"Клиент",u:"tg://resolve",i:"https://jsdelivr.net"},
+    {n:"Таблицы",d:"Базы данных",u:"https://google.com",i:"https://jsdelivr.net"},
+    {n:"Miro",d:"Схемы",u:"https://miro.com",i:"https://jsdelivr.net"},
+    {n:"Postman",d:"Запросы API",u:"https://postman.co",i:"https://jsdelivr.net"}
+  ],
+  apis:[
+    {m:"DOCS",t:"Gemini API",u:"https://google.dev",c:"https://googleapis.com"},
+    {m:"POST",t:"Telegram Bot",u:"https://telegram.org",c:"https://telegram.org<TOKEN>/sendMessage"},
+    {m:"GET",t:"GitHub REST",u:"https://github.com",c:"https://github.com"}
+  ],
+  port:[
+    {t:"ИИ-агент мониторинга",d:"Автоматический трекинг изменений сайтов и отчёты.",g:["AI","Automation"],u:"https://github.com"},
+    {t:"Деловой форум",d:"Программа, спикеры и цифровая навигация.",g:["Production","B2B"],u:"https://github.com"}
+  ]
 };
-// =========================================================
-// 2. ЛОГИКА ИНТЕРФЕЙСА (ЧАСЫ, ВКЛАДКИ, ПОИСК, СЕЙФ КЛЮЧЕЙ)
-// =========================================================
-function updateClock() {
-const now = new Date();
-const hour = now.getHours();
-let greet = "Добрый вечер";
-if (hour >= 5 && hour < 12) greet = "Доброе утро";
-else if (hour >= 12 && hour < 18) greet = "Добрый день";
-const options = { weekday: "long", day: "numeric", month: "long" };
-const dateStr = now.toLocaleDateString("ru-RU", options);
-const timeStr = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-document.getElementById("dateDisplay").textContent = ${dateStr} • ${timeStr};
-document.getElementById("greetingDisplay").textContent = greet;
+const $=id=>document.getElementById(id),K="v_keys_1";
+function clk(){const n=new Date(),h=n.getHours();$("gr").textContent=h<12?"Доброе утро":h<18?"Добрый день":"Добрый вечер";$("dt").textContent=n.toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long"})+" • "+n.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}
+clk();setInterval(clk,15e3);
+function cp(x,m="Скопировано"){navigator.clipboard.writeText(x);$("ts").textContent=m;$("ts").classList.add("on");setTimeout(()=>$("ts").classList.remove("on"),1800)}
+function sw(t,b){document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));b.classList.add("on");$("d").classList.toggle("hide",t!=="d");$("p").classList.toggle("hide",t!=="p")}
+function ren(f=""){
+  const s=f.toLowerCase();
+  $("apps").innerHTML=CFG.apps.filter(a=>(a.n+a.d).toLowerCase().includes(s)).map(a=>`<a class="card" href="${a.u}" target="${a.u.startsWith('http')?'_blank':'_self'}"><div class="ico"><img src="${a.i}" onerror="this.remove()"></div><div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.n}</div><div style="font-size:12px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.d}</div></div></a>`).join("");
+  $("apis").innerHTML=CFG.apis.filter(a=>(a.t+a.c).toLowerCase().includes(s)).map(a=>`<div class="row"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span class="mth">${a.m}</span><div style="min-width:0"><a href="${a.u}" target="_blank" style="color:var(--t);text-decoration:none;font-weight:500;display:block">${a.t}</a><div style="font:11px monospace;color:var(--m);overflow:hidden;text-overflow:ellipsis">${a.c}</div></div></div><button class="btn" onclick="cp('${a.c}')">Копия</button></div>`).join("");
+  $("port").innerHTML=CFG.port.filter(x=>(x.t+x.d+x.g).toLowerCase().includes(s)).map(x=>`<div class="wcard"><div>${x.g.map(g=>`<span class="tag">${g}</span>`).join("")}</div><h3 style="font-size:16px">${x.t}</h3><p style="font-size:13px;color:var(--m);flex:1">${x.d}</p><a href="${x.u}" target="_blank" class="btn" style="text-align:center;padding:8px;text-decoration:none;color:var(--t)">Открыть →</a></div>`).join("");
+  const v=JSON.parse(localStorage.getItem(K)||"[]").filter(x=>x.n.toLowerCase().includes(s));
+  $("vl").innerHTML=v.map((x,i)=>`<div class="row"><div><b>${x.n}</b><div style="font:11px monospace;color:var(--m)">••••${x.v.slice(-4)}</div></div><div><button class="btn" onclick="cp('${x.v}','Ключ скопирован')">Ключ</button> <button class="btn" onclick="delK(${i})">✕</button></div></div>`).join("")||`<div style="font-size:12px;color:var(--m)">Ключей пока нет</div>`;
 }
-updateClock();
-setInterval(updateClock, 15000);
-function showToast(msg) {
-const toast = document.getElementById("toast");
-toast.textContent = msg;
-toast.classList.add("show");
-setTimeout(() => toast.classList.remove("show"), 2000);
-}
-function copyText(text, label = "Скопировано") {
-navigator.clipboard.writeText(text).then(() => showToast(label));
-}
-// Рендер приложений
-function renderApps(filter = "") {
-const container = document.getElementById("appsContainer");
-const q = filter.toLowerCase();
-const filtered = CONFIG.apps.filter(a =>
-a.name.toLowerCase().includes(q) || a.desc.toLowerCase().includes(q) || a.url.toLowerCase().includes(q)
-);
-container.innerHTML = filtered.map(app => <a class="app-card" href="${app.url}" target="${app.url.startsWith('http') ? '_blank' : '_self'}" rel="noopener"> <div class="app-icon"> ${app.icon ?: app.name[0]} </div> <div class="app-info"> <div class="app-name">${app.name}</div> <div class="app-desc">${app.desc}</div> </div> </a>).join("");
-}
-
-// Рендер API
-function renderApis(filter = "") {
-const container = document.getElementById("apiContainer");
-const q = filter.toLowerCase();
-const filtered = CONFIG.apis.filter(item =>
-item.title.toLowerCase().includes(q) || item.copyText.toLowerCase().includes(q) || item.method.toLowerCase().includes(q)
-);
-
-container.innerHTML = filtered.map(item => <div class="api-item"> <div class="api-left"> <span class="method ${item.method}">${item.method}</span> <div class="api-meta"> <a class="api-title" href="${item.url}" target="_blank" rel="noopener">${item.title}</a> <div class="api-url">${item.copyText}</div> </div> </div> <button class="btn-small" onclick="copyText('${item.copyText.replace(/'/g, "\\'")}', 'Эндпоинт скопирован')">Копия</button> </div>).join("");
-}
-// Локальный сейф ключей (localStorage)
-const STORAGE_KEY = "flame_personal_api_vault_v1";
-function getVault() {
-try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-catch { return []; }
-}
-function saveVault(list) {
-localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-renderVault();
-}
-
-function renderVault(filter = "") {
-const container = document.getElementById("vaultList");
-const q = filter.toLowerCase();
-const list = getVault().filter(k => k.name.toLowerCase().includes(q));
-if (!list.length) {
-container.innerHTML = <div style="font-size:12px;color:var(--text-muted);padding:6px 0;">Сохранённых ключей пока нет.</div>;
-return;
-}
-container.innerHTML = list.map((item, idx) => {
-const masked = item.value.length > 8
-? item.value.slice(0, 4) + "••••••••" + item.value.slice(-4)
-: "••••••••";
-return <div class="api-item"> <div class="api-meta"> <div class="api-title">${item.name}</div> <div class="api-url">${masked}</div> </div> <div style="display:flex;gap:6px;"> <button class="btn-small" onclick="copyVaultKey(${idx})">Ключ</button> <button class="btn-small" onclick="deleteVaultKey(${idx})" title="Удалить">✕</button> </div> </div>;
-}).join("");
-}
-
-window.copyVaultKey = function(idx) {
-const list = getVault();
-if (list[idx]) copyText(list[idx].value, Ключ «${list[idx].name}» скопирован);
-};
-window.deleteVaultKey = function(idx) {
-const list = getVault();
-list.splice(idx, 1);
-saveVault(list);
-showToast("Ключ удалён из браузера");
-};
-document.getElementById("vaultForm").addEventListener("submit", e => {
-e.preventDefault();
-const name = document.getElementById("keyName").value.trim();
-const value = document.getElementById("keyValue").value.trim();
-if (!name || !value) return;
-const list = getVault();
-list.push({ name, value });
-saveVault(list);
-e.target.reset();
-showToast("Ключ сохранён локально");
-});
-// Рендер Портфолио
-function renderPortfolio(filter = "") {
-const container = document.getElementById("portfolioContainer");
-const q = filter.toLowerCase();
-const filtered = CONFIG.portfolio.filter(p =>
-p.title.toLowerCase().includes(q) ||
-p.desc.toLowerCase().includes(q) ||
-p.tags.some(t => t.toLowerCase().includes(q))
-);
-container.innerHTML = filtered.map(work => <article class="work-card"> <div class="work-cover" style="${work.cover ?background-image:url('${work.cover}'): ''}"> ${work.cover ? '' : 'ПРЕВЬЮ ПРОЕКТА'} </div> <div class="work-body"> <div class="work-tags"> ${work.tags.map(t =>${t}).join("")} </div> <h3 class="work-title">${work.title}</h3> <p class="work-desc">${work.desc}</p> <a class="work-link" href="${work.url}" target="_blank" rel="noopener">Открыть проект →</a> </div> </article> ).join("");
-}
-
-// Переключение вкладок
-document.querySelectorAll(".tab-btn").forEach(btn => {
-btn.addEventListener("click", () => {
-document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-btn.classList.add("active");
-const target = btn.dataset.tab;
-document.getElementById("tab-dashboard").classList.toggle("hidden", target !== "dashboard");
-document.getElementById("tab-portfolio").classList.toggle("hidden", target !== "portfolio");
-});
-});
-// Поиск в реальном времени и горячая клавиша "/"
-const searchInput = document.getElementById("searchInput");
-searchInput.addEventListener("input", e => {
-const val = e.target.value;
-renderApps(val);
-renderApis(val);
-renderVault(val);
-renderPortfolio(val);
-});
-document.addEventListener("keydown", e => {
-if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
-e.preventDefault();
-searchInput.focus();
-}
-});
-
-// Первый запуск
-renderApps();
-renderApis();
-renderVault();
-renderPortfolio();
+window.delK=i=>{const v=JSON.parse(localStorage.getItem(K)||"[]");v.splice(i,1);localStorage.setItem(K,JSON.stringify(v));ren($("q").value)};
+$("vf").onsubmit=e=>{e.preventDefault();const v=JSON.parse(localStorage.getItem(K)||"[]");v.push({n:$("kn").value,v:$("kv").value});localStorage.setItem(K,JSON.stringify(v));e.target.reset();ren($("q").value);cp("","Сохранено")};
+$("q").oninput=e=>ren(e.target.value);
+document.onkeydown=e=>{if(e.key==="/"&&document.activeElement.tagName!=="INPUT"){e.preventDefault();$("q").focus()}};
+ren();
+</script>
+</body>
+</html>

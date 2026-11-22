@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Флаг в контур</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --text: #e8eaf0;
+    --muted: #9aa3b2;
+    --accent: #4f8cff;
+    --border: #2a303b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  .wrap {
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 22px 16px 48px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0;
+    letter-spacing: .2px;
+  }
+  .hint { color: var(--muted); font-size: 13px; }
+  .layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .panel h2 {
+    margin: 0 0 12px;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  input[type="url"], input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    outline: none;
+  }
+  input[type="url"]:focus, input[type="text"]:focus {
+    border-color: var(--accent);
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+  .value {
+    float: right;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  button {
+    flex: 1;
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-weight: 650;
+    cursor: pointer;
+    background: #2b3140;
+    color: var(--text);
+    transition: .15s;
+  }
+  button:hover { background: #343c4e; }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover { background: #407ef2; }
+  button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+  }
+  .file {
+    display: block;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    background: var(--panel-2);
+  }
+  .file:hover { border-color: var(--accent); color: var(--text); }
+  .file input { display: none; }
+  .switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+  .canvas-area {
+    min-height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      linear-gradient(45deg, #14171d 25%, transparent 25%) -12px 0,
+      linear-gradient(-45deg, #14171d 25%, transparent 25%) -12px 0,
+      linear-gradient(45deg, transparent 75%, #14171d 75%),
+      linear-gradient(-45deg, transparent 75%, #14171d 75%);
+    background-size: 24px 24px;
+    background-color: #101318;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    padding: 14px;
+  }
+  canvas {
+    max-width: 100%;
+    max-height: 74vh;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    background: #fff;
+  }
+  .empty {
+    color: var(--muted);
+    text-align: center;
+    padding: 40px;
+  }
+  .status {
+    margin-top: 10px;
+    min-height: 20px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .status.error { color: #ff7a7a; }
+  .status.ok { color: #7ddba3; }
+  .top-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Перевод цветного флага в контур</h1>
+      <div class="hint">Загрузите изображение по URL или с устройства, настройте параметры и сохраните результат.</div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="panel">
+      <h2>Изображение</h2>
+
+      <label for="imageUrl">URL изображения</label>
+      <input id="imageUrl" type="url" placeholder="https://example.com/flag.png">
+
+      <div class="row">
+        <button id="loadUrl" type="button">Загрузить по URL</button>
+      </div>
+
+      <label class="file" for="fileInput">
+        <strong>Выбрать файл с устройства</strong><br>
+        PNG, JPG, WEBP, GIF
+        <input id="fileInput" type="file" accept="image/*">
+      </label>
+
+      <h2 style="margin-top:22px">Настройки контура</h2>
+
+      <label>Порог яркости <span class="value" id="thresholdValue">128</span></label>
+      <input id="threshold" type="range" min="0" max="255" value="128">
+
+      <label>Контрастность <span class="value" id="contrastValue">1.0</span></label>
+      <input id="contrast" type="range" min="0.2" max="3" step="0.05" value="1">
+
+      <label>Edge detection <span class="value" id="edgeValue">35</span></label>
+      <input id="edge" type="range" min="0" max="100" value="35">
+
+      <label>Толщина контура <span class="value" id="thicknessValue">1</span></label>
+      <input id="thickness" type="range" min="1" max="6" step="1" value="1">
+
+      <label>Сглаживание <span class="value" id="smoothValue">1</span></label>
+      <input id="smooth" type="range" min="0" max="4" step="1" value="1">
+
+      <label>Детализация / масштаб <span class="value" id="scaleValue">100%</span></label>
+      <input id="scale" type="range" min="25" max="200" step="5" value="100">
+
+      <div class="switch">
+        <span>Инвертировать контур</span>
+        <input id="invert" type="checkbox">
+      </div>
+
+      <div class="switch">
+        <span>Белый фон</span>
+        <input id="whiteBg" type="checkbox" checked>
+      </div>
+
+      <label>Режим обработки</label>
+      <select id="mode" class="select">
+        <option value="edges">Контуры цветовых переходов</option>
+        <option value="threshold">Чёрно-белый по яркости</option>
+        <option value="combined">Контуры + яркость</option>
+      </select>
+
+      <div class="row" style="margin-top:18px">
+        <button id="process" class="primary" type="button" disabled>Перевести в контур</button>
+      </div>
+      <div class="row">
+        <button id="download" type="button" disabled>Скачать PNG</button>
+      </div>
+
+      <div id="status" class="status">Изображение не загружено.</div>
+    </aside>
+
+    <main class="panel">
+      <div class="top-actions">
+        <button id="showOriginal" type="button" disabled>Показать оригинал</button>
+        <button id="showResult" type="button" disabled>Показать контур</button>
+      </div>
+
+      <div class="canvas-area">
+        <canvas id="canvas"></canvas>
+        <div id="empty" class="empty">
+          Здесь появится изображение.<br>
+          Загрузите флаг по ссылке или выберите файл.
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+const imageUrl = document.getElementById('imageUrl');
+const fileInput = document.getElementById('fileInput');
+const status = document.getElementById('status');
+const empty = document.getElementById('empty');
+
+const threshold = document.getElementById('threshold');
+const contrast = document.getElementById('contrast');
+const edge = document.getElementById('edge');
+const thickness = document.getElementById('thickness');
+const smooth = document.getElementById('smooth');
+const scale = document.getElementById('scale');
+const invert = document.getElementById('invert');
+const whiteBg = document.getElementById('whiteBg');
+const mode = document.getElementById('mode');
+
+const processBtn = document.getElementById('process');
+const downloadBtn = document.getElementById('download');
+const showOriginalBtn = document.getElementById('showOriginal');
+const showResultBtn = document.getElementById('showResult');
+
+let originalImage = null;
+let hasResult = false;
+let showingOriginal = false;
+
+const valueEls = {
+  threshold: document.getElementById('thresholdValue'),
+  contrast: document.getElementById('contrastValue'),
+  edge: document.getElementById('edgeValue'),
+  thickness: document.getElementById('thicknessValue'),
+  smooth: document.getElementById('smoothValue'),
+  scale: document.getElementById('scaleValue')
+};
+
+function setStatus(text, type = '') {
+  status.textContent = text;
+  status.className = 'status ' + type;
+}
+
+function updateLabels() {
+  valueEls.threshold.textContent = threshold.value;
+  valueEls.contrast.textContent = Number(contrast.value).toFixed(2);
+  valueEls.edge.textContent = edge.value;
+  valueEls.thickness.textContent = thickness.value;
+  valueEls.smooth.textContent = smooth.value;
+  valueEls.scale.textContent = scale.value + '%';
+}
+
+[threshold, contrast, edge, thickness, smooth, scale].forEach(el => {
+  el.addEventListener('input', () => {
+    updateLabels();
+    if (originalImage && hasResult) processImage();
+  });
+});
+
+[invert, whiteBg, mode].forEach(el => {
+  el.addEventListener('change', () => {
+    if (originalImage && hasResult) processImage();
+  });
+});
+
+function fitCanvas(img, scalePercent) {
+  const maxSide = 2200;
+  let w = img.naturalWidth || img.width;
+  let h = img.naturalHeight || img.height;
+  const factor = scalePercent / 100;
+  w = Math.max(1, Math.round(w * factor));
+  h = Math.max(1, Math.round(h * factor));
+
+  if (Math.max(w, h) > maxSide) {
+    const k = maxSide / Math.max(w, h);
+    w = Math.round(w * k);
+    h = Math.round(h * k);
+  }
+
+  canvas.width = w;
+  canvas.height = h;
+}
+
+function drawOriginal(img) {
+  fitCanvas(img, 100);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  empty.style.display = 'none';
+  canvas.style.display = 'block';
+  showingOriginal = true;
+}
+
+function grayscaleLuma(r, g, b) {
+  return 0.299 * r + 0.587 * g + 0.114 * b;
+}
+
+function applyContrast(value, amount) {
+  const c = amount;
+  return Math.max(0, Math.min(255, (value - 128) * c + 128));
+}
+
+function sobelEdge(gray, w, h, strength) {
+  const out = new Float32Array(w * h);
+  const k = strength / 100;
+
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+
+      const tl = gray[i - w - 1], tc = gray[i - w], tr = gray[i - w + 1];
+      const ml = gray[i - 1],                              mr = gray[i + 1];
+      const bl = gray[i + w - 1], bc = gray[i + w], br = gray[i + w + 1];
+
+      const gx = -tl - 2 * ml - bl + tr + 2 * mr + br;
+      const gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
+
+      out[i] = Math.min(255, Math.sqrt(gx * gx + gy * gy) * k);
+    }
+  }
+  return out;
+}
+
+function dilate(mask, w, h, radius) {
+  if (radius <= 1) return mask;
+  const out = new Uint8ClampedArray(mask);
+  const r = radius - 1;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      if (!mask[y * w + x]) continue;
+
+      for (let dy = -r; dy <= r; dy++) {
+        const yy = y + dy;
+        if (yy < 0 || yy >= h) continue;
+
+        for (let dx = -r; dx <= r; dx++) {
+          const xx = x + dx;
+          if (xx < 0 || xx >= w) continue;
+          out[yy * w + xx] = 255;
+        }
+      }
+    }
+  }
+  return out;
+}
+
+function processImage() {
+  if (!originalImage) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const src = ctx.getImageData(0, 0, w, h);
+  const data = src.data;
+
+  const gray = new Float32Array(w * h);
+  for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+    gray[p] = grayscaleLuma(data[i], data[i + 1], data[i + 2]);
+  }
+
+  const contrastAmount = Number(contrast.value);
+  for (let p = 0; p < gray.length; p++) {
+    gray[p] = applyContrast(gray[p], contrastAmount);
+  }
+
+  const edges = sobelEdge(gray, w, h, Number(edge.value));
+  const edgeThreshold = 28;
+  const brightnessThreshold = Number(threshold.value);
+
+  let mask = new Uint8ClampedArray(w * h);
+  const processingMode = mode.value;
+
+  for (let p = 0; p < mask.length; p++) {
+    const isEdge = edges[p] >= edgeThreshold;
+    const isDark = gray[p] < brightnessThreshold;
+
+    if (processingMode === 'edges') {
+      mask[p] = isEdge ? 255 : 0;
+    } else if (processingMode === 'threshold') {
+      mask[p] = isDark ? 255 : 0;
+    } else {
+      mask[p] = isEdge || isDark ? 255 : 0;
+    }
+  }
+
+  mask = dilate(mask, w, h, Number(thickness.value));
+
+  const out = ctx.createImageData(w, h);
+  const outData = out.data;
+  const useWhite = whiteBg.checked;
+  const shouldInvert = invert.checked;
+
+  for (let p = 0; p < mask.length; p++) {
+    let line = mask[p] > 0;
+
+    if (shouldInvert) line = !line;
+
+    const color = line ? 0 : (useWhite ? 255 : 0);
+    const alpha = line || useWhite ? 255 : 0;
+    const i = p * 4;
+
+    outData[i] = color;
+    outData[i + 1] = color;
+    outData[i + 2] = color;
+    outData[i + 3] = alpha;
+  }
+
+  ctx.putImageData(out, 0, 0);
+  hasResult = true;
+  showingOriginal = false;
+
+  downloadBtn.disabled = false;
+  showOriginalBtn.disabled = false;
+  showResultBtn.disabled = true;
+  setStatus('Контур построен. Можно изменить параметры — результат обновится автоматически.', 'ok');
+}
+
+function loadImageFromElement(img) {
+  originalImage = img;
+  drawOriginal(img);
+  processBtn.disabled = false;
+  showOriginalBtn.disabled = true;
+  showResultBtn.disabled = true;
+  downloadBtn.disabled = true;
+  hasResult = false;
+  setStatus('Изображение загружено. Нажмите «Перевести в контур».', 'ok');
+}
+
+function loadFromUrl() {
+  const url = imageUrl.value.trim();
+  if (!url) {
+    setStatus('Введите ссылку на изображение.', 'error');
+    return;
+  }
+
+  setStatus('Загрузка изображения…');
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+
+  img.onload = () => {
+    loadImageFromElement(img);
+  };
+
+  img.onerror = () => {
+    setStatus('Не удалось загрузить изображение. Проверьте ссылку или доступ сайта к внешним изображениям.', 'error');
+  };
+
+  img.src = url;
+}
+
+function loadFromFile(file) {
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    setStatus('Выберите графический файл.', 'error');
+    return;
+  }
+
+  setStatus('Чтение файла…');
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      imageUrl.value = '';
+      loadImageFromElement(img);
+    };
+    img.onerror = () => setStatus('Файл не распознан как изображение.', 'error');
+    img.src = reader.result;
+  };
+
+  reader.onerror = () => setStatus('Не удалось прочитать файл.', 'error');
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('loadUrl').addEventListener('click', loadFromUrl);
+imageUrl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadFromUrl();
+});
+
+fileInput.addEventListener('change', e => loadFromFile(e.target.files[0]));
+
+processBtn.addEventListener('click', () => {
+  if (!originalImage) return;
+  setStatus('Обработка…');
+  setTimeout(() => {
+    try {
+      drawOriginal(originalImage);
+      processImage();
+    } catch (err) {
+      setStatus('Ошибка обработки: ' + err.message, 'error');
+    }
+  }, 20);
+});
+
+showOriginalBtn.addEventListener('click', () => {
+  if (!originalImage) return;
+  drawOriginal(originalImage);
+  showingOriginal = true;
+  showOriginalBtn.disabled = true;
+  showResultBtn.disabled = !hasResult;
+});
+
+showResultBtn.addEventListener('click', () => {
+  if (!originalImage || !hasResult) return;
+  processImage();
+  showingOriginal = false;
+  showOriginalBtn.disabled = false;
+  showResultBtn.disabled = true;
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (!hasResult) return;
+
+  canvas.toBlob(blob => {
+    if (!blob) {
+      setStatus('Не удалось подготовить PNG.', 'error');
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'flag-outline.png';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+
+    setStatus('PNG сохранён через диалог браузера.', 'ok');
+  }, 'image/png');
+});
+
+updateLabels();
+</script>
+</body>
+</html>

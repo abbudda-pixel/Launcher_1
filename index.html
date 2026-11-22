@@ -22,7 +22,8 @@ h1{font-size:28px;font-weight:700}
 .card{display:flex;align-items:center;gap:10px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px;text-decoration:none;color:var(--t);transition:.15s}
 .card:hover{background:var(--sh);border-color:var(--a);transform:translateY(-2px)}
 .ico{width:34px;height:34px;border-radius:8px;background:rgba(56,189,248,.16);color:var(--a);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}
-.ico img{width:20px;height:20px}
+.ico{width:36px;height:36px;border-radius:8px;background:rgba(56,189,248,.16);color:var(--a);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;overflow:hidden}
+.ico img{width:85%;height:85%;object-fit:contain;transition:transform .15s ease}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
 .box{background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:14px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;background:var(--bg);border-radius:7px;margin-bottom:7px}
@@ -82,30 +83,30 @@ h1{font-size:28px;font-weight:700}
 <script>
 const CFG={
   apps:[
-    {n:"GitHub",d:"Репозитории",u:"https://github.com/abbudda-pixel/Launcher_1/tree/main",i:"https://avatars.githubusercontent.com/u/359620157?s=400&u=84b1bd4d3001501bb98b57bb8617163ac41f11e6&v=4"},
-    {n:"AI Studio",d:"Модели и API",u:"https://google.com",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ISdc2pCOYOyf3SkSGIq_wd8Pz0pgfSxcXGD7qAG02g&s=10"},
-    {n:"Transcript",d:"YouTube",u:"YouTube",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_u-SugFZ-Dj20xJy7RVyz7xeYydw29kdiOO2WUrusEw&s=10"},
-    {n:"Таблицы",d:"Базы данных",u:"https://google.com",i:"https://jsdelivr.net"},
-    {n:"Miro",d:"Схемы",u:"https://miro.com",i:"https://jsdelivr.net"},
-    {n:"SmallPDF",d:"Запросы API",u:"https://smallpdf.com/ru#r=app",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5SCHnIhAMm6FOQ8Hdl3vkIR8kXPQIsURucwau9h-Lpg&s=10"},
-    {n:"SVG 2 PNG",d:"Блиц",u:"https://svgtopng.com/",i:"svg2png.svg"},
-    {n:"Cloudconvert",d:"Мультиконвертер",u:"https://cloudconvert.com/",i:"Cloudlink.png"}
+    {n:"GitHub",d:"Репозитории",u:"https://github.com/abbudda-pixel/Launcher_1/tree/main",i:"https://avatars.githubusercontent.com/u/359620157?s=400&u=84b1bd4d3001501bb98b57bb8617163ac41f11e6&v=4",z:1.15},
+    {n:"AI Studio",d:"Модели и API",u:"https://google.com",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ISdc2pCOYOyf3SkSGIq_wd8Pz0pgfSxcXGD7qAG02g&s=10",z:1.15},
+    {n:"Transcript",d:"YouTube",u:"YouTube",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_u-SugFZ-Dj20xJy7RVyz7xeYydw29kdiOO2WUrusEw&s=10",z:1.15},
+    {n:"Таблицы",d:"Базы данных",u:"https://google.com",i:"https://jsdelivr.net",z:1.15},
+    {n:"Miro",d:"Схемы",u:"https://miro.com",i:"https://jsdelivr.net",z:1.15},
+    {n:"SmallPDF",d:"Запросы API",u:"https://smallpdf.com/ru#r=app",i:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS5SCHnIhAMm6FOQ8Hdl3vkIR8kXPQIsURucwau9h-Lpg&s=10",z:1.15},
+    {n:"SVG 2 PNG",d:"Блиц",u:"https://svgtopng.com/",i:"svg2png.svg",z:1.15},
+    {n:"Cloudconvert",d:"Мультиконвертер",u:"https://cloudconvert.com/",i:"Cloudlink.png",z:1.15}
   ],
   ai:[
-    {cat:"Бизнес",n:"Трекер обновлений",d:"сайт AntiFraudRussia-2026",u:"https://...",i:"https://jsdelivr.net"},
-    {cat:"Бизнес",n:"HeatMap дел.программы",d:"AntiFraudRussia-2025",u:"https://...",i:"https://jsdelivr.net"},
-    {cat:"Бизнес",n:"HeatMap вебинара",d:"тест",u:"https://...",i:"https://jsdelivr.net"},
-    {cat:"Бизнес",n:"Кувёртковёрт",d:"ДелПрог -> Кувёртки",u:"https://...",i:"https://jsdelivr.net"},
-    {cat:"Бизнес",n:"Брифолог",d:"ДелПрог -> Памятка спикеру",u:"https://...",i:"https://jsdelivr.net"},
-    {cat:"ЗОЖ",n:"Калораж",d:"тест",u:"https://...",i:"heart.png"},
-    {cat:"ЗОЖ",n:"Велотрени",d:"IC7",u:"https://...",i:"IC7.png"},
-    {cat:"ЗОЖ",n:"Велотрени",d:"Colnago",u:"https://...",i:"Colnago.png"},
-    {cat:"Детское",n:"Конвертер графики",d:"Контурные флаги",u:"flags_converter.html",i:"uk-icon.png"}
+    {cat:"Бизнес",n:"Трекер обновлений",d:"сайт AntiFraudRussia-2026",u:"https://...",i:"https://jsdelivr.net",z:1.15},
+    {cat:"Бизнес",n:"HeatMap дел.программы",d:"AntiFraudRussia-2025",u:"https://...",i:"https://jsdelivr.net",z:1.15},
+    {cat:"Бизнес",n:"HeatMap вебинара",d:"тест",u:"https://...",i:"https://jsdelivr.net",z:1.15},
+    {cat:"Бизнес",n:"Кувёртковёрт",d:"ДелПрог -> Кувёртки",u:"https://...",i:"https://jsdelivr.net",z:1.15},
+    {cat:"Бизнес",n:"Брифолог",d:"ДелПрог -> Памятка спикеру",u:"https://...",i:"https://jsdelivr.net",z:1.15},
+    {cat:"ЗОЖ",n:"Калораж",d:"тест",u:"https://...",i:"heart.png",z:1.15},
+    {cat:"ЗОЖ",n:"Велотрени",d:"IC7",u:"https://...",i:"IC7.png",z:1.15},
+    {cat:"ЗОЖ",n:"Велотрени",d:"Colnago",u:"https://...",i:"Colnago.png",z:1.15},
+    {cat:"Детское",n:"Конвертер графики",d:"Контурные флаги",u:"flags_converter.html",i:"uk-icon.png",z:1.15}
 ],
 apis:[
-    {m:"DOCS",t:"Gemini API",u:"https://google.dev",c:"https://googleapis.com"},
-    {m:"POST",t:"Telegram Bot",u:"https://telegram.org",c:"https://telegram.org<TOKEN>/sendMessage"},
-    {m:"GET",t:"GitHub REST",u:"https://github.com",c:"https://github.com"}
+    {m:"DOCS",t:"Gemini API",u:"https://google.dev",c:"https://googleapis.com",z:1.15},
+    {m:"POST",t:"Telegram Bot",u:"https://telegram.org",c:"https://telegram.org<TOKEN>/sendMessage",z:1.15},
+    {m:"GET",t:"GitHub REST",u:"https://github.com",c:"https://github.com",z:1.15}
   ],
   port:[
     {t:"Форум «КВАНТ»",d:"Автор идеи, генеральный продюсер Всероссийского форума по квантовым технологиям, 2022-2025 гг.",g:["Pioneer","Production","Administration"],u:"https://github.com"},

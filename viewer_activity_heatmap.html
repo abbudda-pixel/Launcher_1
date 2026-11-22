@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тепловая карта активности зрителей</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--line:#24304d;--text:#e8edf7;--muted:#9aa8c4;--accent:#5b8cff}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:18px 22px;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:20px}
+p.sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+main{padding:18px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+@media(max-width:980px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.04em}
+input,textarea,select{width:100%;background:#0d1424;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px;font:inherit}
+textarea{min-height:190px;resize:vertical}
+button{margin-top:14px;width:100%;background:var(--accent);border:0;color:white;padding:11px;border-radius:10px;font-weight:650;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.hint{color:var(--muted);font-size:12px;margin-top:8px}
+#player{aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+#player iframe{width:100%;height:100%;border:0}
+#heatmapWrap{position:relative;margin-top:14px}
+#heatmap{width:100%;height:330px;display:block;border-radius:10px;border:1px solid var(--line)}
+#cursor{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.75;pointer-events:none;display:none}
+.legend{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted)}
+#legendBar{height:10px;flex:1;border-radius:6px;background:linear-gradient(90deg,#0b1c3a,#1c5fa8,#f2c14e,#ef5b5b)}
+#wordList{margin-top:14px;max-height:250px;overflow:auto}
+.word-row{display:grid;grid-template-columns:1fr 72px;gap:10px;padding:7px 0;border-bottom:1px solid #1c2540;font-size:13px}
+.bar{height:8px;border-radius:5px;background:linear-gradient(90deg,#1c5fa8,#f2c14e,#ef5b5b)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:#0d1424;border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:11px;color:var(--muted)}
+#status{margin-top:10px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>Тепловая карта активности зрителей</h1>
+<p class="sub">Видео или трансляция + расшифровка речи → динамика интереса по времени и ключевым словам</p>
+</header>
+<main>
+<section class="card">
+<label>URL видео / трансляции</label>
+<input id="url" placeholder="https://www.youtube.com/watch?v=...">
+<label>Расшифровка спикера</label>
+<textarea id="transcript" placeholder="Вставьте SRT/VTT или текст с метками времени:&#10;&#10;00:00 Приветствие и тема встречи&#10;00:42 Обзор продукта&#10;01:30 Демонстрация&#10;..."></textarea>
+<label>Данные активности зрителей (необязательно)</label>
+<textarea id="activity" placeholder="timestamp,viewers&#10;0,120&#10;30,180&#10;60,240&#10;..."></textarea>
+<div class="hint">Формат CSV: <code>timestamp,viewers</code>. Время — в секундах. Если данных нет, активность моделируется по плотности и ключевым словам речи.</div>
+<label>Тип источника</label>
+<select id="sourceType"><option value="youtube">YouTube</option><option value="file">Прямой видеофайл / поток</option></select>
+<button id="build">Построить тепловую карту</button>
+<button id="demo" class="ghost">Загрузить демо-данные</button>
+<div id="status"></div>
+</section>
+
+<section class="card">
+<div id="player"></div>
+<div id="heatmapWrap">
+<canvas id="heatmap"></canvas>
+<div id="cursor"></div>
+</div>
+<div class="legend"><span>Низкая</span><div id="legendBar"></div><span>Высокая</span></div>
+<div class="stats">
+<div class="stat"><b id="peakTime">—</b><span>Пик активности</span></div>
+<div class="stat"><b id="peakWord">—</b><span>Топ-слово</span></div>
+<div class="stat"><b id="coverage">—</b><span>Покрытие карты</span></div>
+</div>
+<h3 style="margin:18px 0 6px;font-size:15px">Ключевые слова</h3>
+<div id="wordList"></div>
+</section>
+</main>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const $=id=>document.getElementById(id);
+let player=null, data=[], duration=0, words=[];
+
+function parseTimestamps(text){
+  const out=[]; const re=/(\d{1,2}):(\d{2})(?::(\d{2}))?/g; let m, last=0;
+  const lines=text.split(/\n+/).filter(Boolean);
+  for(const line of lines){
+    const matches=[...line.matchAll(re)];
+    if(matches.length){
+      const mm=matches[0]; const sec=mm[3]?+mm[1]*3600+ +mm[2]*60+ +mm[3]:+mm[1]*60+ +mm[2];
+      const content=line.replace(re,'').replace(/^[\s\-–—>]+/,'').trim();
+      if(content) out.push({t:sec,text:content});
+    } else if(out.length){ out[out.length-1].text+=' '+line.trim(); }
+  }
+  return out;
+}
+
+function tokenize(text){
+  return text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/)
+  .filter(w=>w.length>3 && !['это','для','как','что','так','или','если','чтобы','который','которые','очень','также','можно','когда','всё','все','быть','есть','был','была'].includes(w));
+}
+
+function parseActivity(text){
+  return text.trim().split(/\n+/).map(l=>l.split(/[,;\t]/).map(x=>parseFloat(x.trim())))
+  .filter(a=>a.length>=2 && !isNaN(a[0]) && !isNaN(a[1])).map(a=>({t:a[0],v:a[1]}));
+}
+
+function extractYouTubeId(url){
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+  return m?m[1]:null;
+}
+
+function buildData(){
+  const transcript=$('transcript').value;
+  const activityRaw=$('activity').value;
+  const cues=parseTimestamps(transcript);
+  if(!cues.length){ $('status').textContent='Добавьте расшифровку с метками времени.'; return; }
+  const activity=parseActivity(activityRaw);
+  const end=Math.max(...cues.map(c=>c.t), activity.length?Math.max(...activity.map(a=>a.t)):0, 60);
+  const buckets=120, step=end/buckets;
+  const counts=Array(buckets).fill(0);
+  cues.forEach(c=>{ const i=Math.min(buckets-1,Math.floor(c.t/step)); counts[i]+=c.text.length; });
+  const wordCounts={};
+  cues.forEach(c=>tokenize(c.text).forEach(w=>wordCounts[w]=(wordCounts[w]||0)+1));
+  words=Object.entries(wordCounts).sort((a,b)=>b[1]-a[1]).slice(0,24)
+    .map(([word,count])=>({word,count,firstAt:cues.find(c=>tokenize(c.text).includes(word))?.t||0}));
+  let series;
+  if(activity.length){
+    series=Array(buckets).fill(0);
+    activity.forEach(a=>{ const i=Math.min(buckets-1,Math.floor(a.t/step)); series[i]=Math.max(series[i],a.v); });
+    const max=Math.max(...series,1); series=series.map(v=>v/max);
+  } else {
+    const max=Math.max(...counts,1);
+    series=counts.map((c,i)=>{
+      const local=cues.filter(c=>c.t>=i*step&&c.t<(i+1)*step);
+      const keywordBoost=local.reduce((s,c)=>s+tokenize(c.text).filter(w=>wordCounts[w]>1).length,0);
+      return Math.min(1,(c/max)*.65+Math.min(1,keywordBoost/8)*.35);
+    });
+  }
+  data={series,step,end,cues,activity};
+  duration=end;
+  drawHeatmap(); renderWords(); updateStats(); mountPlayer();
+  $('status').textContent='Карта построена. Наведите курсор на график, чтобы перейти к моменту видео.';
+}
+
+function color(v){
+  const stops=[[.0,11,28,58],[.35,28,95,168],[.65,242,193,78],[1,239,91,91]];
+  for(let i=1;i<stops.length;i++){
+    if(v<=stops[i][0]){
+      const a=stops[i-1],b=stops[i],k=(v-a[0])/(b[0]-a[0]);
+      return `rgb(${Math.round(a[1]+(b[1]-a[1])*k)},${Math.round(a[2]+(b[2]-a[2])*k)},${Math.round(a[3]+(b[3]-a[3])*k)})`;
+    }
+  }
+  return 'rgb(239,91,91)';
+}
+
+function drawHeatmap(){
+  const canvas=$('heatmap'), ctx=canvas.getContext('2d');
+  const w=canvas.clientWidth*devicePixelRatio, h=330*devicePixelRatio;
+  canvas.width=w; canvas.height=h;
+  ctx.clearRect(0,0,w,h);
+  const {series,step,end,cues}=data;
+  const cols=series.length, rows=words.length||1;
+  const cw=w/cols, ch=h/rows;
+  for(let r=0;r<rows;r++){
+    const word=words[r]?.word||'';
+    for(let c=0;c<cols;c++){
+      const base=series[c];
+      const local=cues.filter(q=>q.t>=c*step&&q.t<(c+1)*step).some(q=>tokenize(q.text).includes(word));
+      const v=Math.min(1,base*(local?1.35:.55));
+      ctx.fillStyle=color(v); ctx.fillRect(c*cw,r*ch,Math.ceil(cw),Math.ceil(ch));
+    }
+  }
+  ctx.fillStyle='rgba(232,237,247,.85)'; ctx.font=`${11*devicePixelRatio}px system-ui`;
+  words.slice(0,rows).forEach((wd,r)=>{
+    ctx.fillText(wd.word.slice(0,22),6*devicePixelRatio,(r+.68)*ch);
+  });
+  const marks=[0,.25,.5,.75,1];
+  marks.forEach(m=>{ const sec=m*end; const mm=Math.floor(sec/60), ss=String(Math.floor(sec%60)).padStart(2,'0');
+    ctx.fillText(`${mm}:${ss}`,m*(w-40*devicePixelRatio)+6*devicePixelRatio,h-6*devicePixelRatio); });
+}
+
+function renderWords(){
+  $('wordList').innerHTML=words.map(w=>`<div class="word-row"><div><b>${w.word}</b><div style="color:var(--muted);font-size:11px">упоминаний: ${w.count}</div></div><div class="bar"></div></div>`).join('');
+}
+
+function updateStats(){
+  const {series,step,end}=data;
+  const peak=series.indexOf(Math.max(...series));
+  $('peakTime').textContent=`${Math.floor(peak*step/60)}:${String(Math.floor(peak*step%60)).padStart(2,'0')}`;
+  $('peakWord').textContent=words[0]?.word||'—';
+  $('coverage').textContent=`${words.length} слов`;
+}
+
+function mountPlayer(){
+  const url=$('url').value.trim(), type=$('sourceType').value;
+  const container=$('player'); container.innerHTML='';
+  if(type==='youtube'){
+    const id=extractYouTubeId(url);
+    if(!id){ $('status').textContent='Не удалось распознать YouTube ID.'; return; }
+    player=new YT.Player('player',{videoId:id,playerVars:{rel:0,modestbranding:1},events:{onReady:e=>e.target.playVideo()}});
+  } else if(url){
+    container.innerHTML=`<video id="video" controls style="width:100%;height:100%;background:#000" src="${url.replace(/"/g,'&quot;')}"></video>`;
+    player={seekTo:t=>{$('video').currentTime=t;},getCurrentTime:()=>+$('video').currentTime||0};
+  }
+}
+
+$('heatmap').addEventListener('mousemove',e=>{
+  const rect=$('heatmap').getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width;
+  const cursor=$('cursor'); cursor.style.display='block'; cursor.style.left=(x*rect.width)+'px';
+  if(data){ const t=x*data.end; if(player?.seekTo) player.seekTo(t,true); }
+});
+$('heatmap').addEventListener('mouseleave',()=>$('cursor').style.display='none');
+$('build').onclick=buildData;
+$('demo').onclick=()=>{
+  $('url').value='https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  $('transcript').value=`00:00 Приветствие и тема вебинара\n00:35 Обзор рынка и основные проблемы\n01:20 Ключевая идея продукта\n02:05 Демонстрация интерфейса\n02:50 Интеграции и автоматизация\n03:30 Кейсы клиентов и результаты\n04:10 Тарифы и следующие шаги\n04:45 Вопросы и ответы`;
+  $('activity').value=`0,120\n30,180\n60,260\n90,340\n120,420\n150,310\n180,520\n210,410\n240,610\n270,380\n300,290`;
+  $('sourceType').value='youtube'; buildData();
+};
+</script>
+</body>
+</html>

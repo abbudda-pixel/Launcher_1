@@ -38,6 +38,12 @@ h1{font-size:28px;font-weight:700}
 .toast{position:fixed;bottom:18px;right:18px;background:var(--sh);border:1px solid var(--a);padding:9px 14px;border-radius:8px;opacity:0;transition:.2s;pointer-events:none}
 .toast.on{opacity:1}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
+.sub{font-size:12px;font-weight:600;margin:14px 0 8px;display:flex;align-items:center;gap:8px;color:var(--t)}
+.sub::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.g-biz{color:#fbbf24}.g-zozh{color:#34d399}.g-kids{color:#fb923c}
+.c-biz{border-left:3px solid #fbbf24}.c-biz .ico{background:rgba(251,191,36,.15);color:#fbbf24}
+.c-zozh{border-left:3px solid #34d399}.c-zozh .ico{background:rgba(52,211,153,.15);color:#34d399}
+.c-kids{border-left:3px solid #fb923c}.c-kids .ico{background:rgba(251,146,60,.15);color:#fb923c}
 </style>
 </head>
 <body>
@@ -54,7 +60,7 @@ h1{font-size:28px;font-weight:700}
     <div class="sec">Приложения и сервисы</div>
     <div class="grid" id="apps"></div>
     <div class="sec">Мои AI-продукты</div>
-    <div class="grid" id="ai"></div>
+    <div id="ai"></div>
     <div class="sec">API-коллекции и локальный сейф ключей</div>
     <div class="cols">
       <div class="box"><div id="apis"></div></div>
@@ -82,13 +88,15 @@ const CFG={
     {n:"Postman",d:"Запросы API",u:"https://postman.co",i:"https://jsdelivr.net"}
   ],
   ai:[
-    {n:"Трекер обновлений",d:"сайт AntiFraudRussia-2026",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"HeatMap дел.программы",d:"AntiFraudRussia-2025",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"HeatMap вебинара",d:"тест",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"Кувёртковёрт",d:"ДелПрог -> Кувёртки",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"Брифолог",d:"ДелПрог -> Памятка спикеру",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"Счётчик калоража",d:"тест",u:"https://...",i:"https://jsdelivr.net"},
-    {n:"Детское",d:"Контурные флаги",u:"https://t.me...",i:"https://jsdelivr.net"}
+    {cat:"Бизнес",n:"Трекер обновлений",d:"сайт AntiFraudRussia-2026",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"Бизнес",n:"HeatMap дел.программы",d:"AntiFraudRussia-2025",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"Бизнес",n:"HeatMap вебинара",d:"тест",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"Бизнес",n:"Кувёртковёрт",d:"ДелПрог -> Кувёртки",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"Бизнес",n:"Брифолог",d:"ДелПрог -> Памятка спикеру",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"ЗОЖ",n:"Счётчик калоража",d:"тест",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"ЗОЖ",n:"Велотрени",d:"IC7",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"ЗОЖ",n:"Велотрени",d:"Colnago",u:"https://...",i:"https://jsdelivr.net"},
+    {cat:"Детское",n:"Контурные",d:"флаги",u:"https://t.me...",i:"https://jsdelivr.net"}
 ],
 apis:[
     {m:"DOCS",t:"Gemini API",u:"https://google.dev",c:"https://googleapis.com"},
@@ -122,7 +130,12 @@ function ren(f=""){
   const s=f.toLowerCase();
   $("apps").innerHTML=CFG.apps.filter(a=>(a.n+a.d).toLowerCase().includes(s)).map(a=>`<a class="card" href="${a.u}" target="${a.u.startsWith('http')?'_blank':'_self'}"><div class="ico"><img src="${a.i}" onerror="this.remove()"></div><div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.n}</div><div style="font-size:12px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.d}</div></div></a>`).join("");
   $("apis").innerHTML=CFG.apis.filter(a=>(a.t+a.c).toLowerCase().includes(s)).map(a=>`<div class="row"><div style="display:flex;align-items:center;gap:8px;min-width:0"><span class="mth">${a.m}</span><div style="min-width:0"><a href="${a.u}" target="_blank" style="color:var(--t);text-decoration:none;font-weight:500;display:block">${a.t}</a><div style="font:11px monospace;color:var(--m);overflow:hidden;text-overflow:ellipsis">${a.c}</div></div></div><button class="btn" onclick="cp('${a.c}')">Копия</button></div>`).join("");
-  $("ai").innerHTML=CFG.ai.filter(a=>(a.n+a.d).toLowerCase().includes(s)).map(a=>`<a class="card" href="${a.u}" target="${a.u.startsWith('http')?'_blank':'_self'}"><div class="ico">${a.i?`<img src="${a.i}" onerror="this.remove()">`:a.n}</div><div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.n}</div><div style="font-size:12px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.d}</div></div></a>`).join("");
+  const G=[{k:"Бизнес",c:"biz"},{k:"ЗОЖ",c:"zozh"},{k:"Детское",c:"kids"}];
+$("ai").innerHTML=G.map(g=>{
+  const it=CFG.ai.filter(a=>a.cat===g.k&&(a.n+a.d+a.cat).toLowerCase().includes(s));
+  if(!it.length)return"";
+  return`<div class="sub g-${g.c}">${g.k}</div><div class="grid">${it.map(a=>`<a class="card c-${g.c}" href="${a.u}" target="${a.u.startsWith('http')?'_blank':'_self'}"><div class="ico">${a.i?`<img src="${a.i}" onerror="this.remove()">`:a.n}</div><div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.n}</div><div style="font-size:12px;color:var(--m);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.d}</div></div></a>`).join("")}</div>`;
+}).join("");
   $("port").innerHTML=CFG.port.filter(x=>(x.t+x.d+x.g).toLowerCase().includes(s)).map(x=>`<div class="wcard"><div>${x.g.map(g=>`<span class="tag">${g}</span>`).join("")}</div><h3 style="font-size:16px">${x.t}</h3><p style="font-size:13px;color:var(--m);flex:1">${x.d}</p><a href="${x.u}" target="_blank" class="btn" style="text-align:center;padding:8px;text-decoration:none;color:var(--t)">Открыть →</a></div>`).join("");
   const v=JSON.parse(localStorage.getItem(K)||"[]").filter(x=>x.n.toLowerCase().includes(s));
   $("vl").innerHTML=v.map((x,i)=>`<div class="row"><div><b>${x.n}</b><div style="font:11px monospace;color:var(--m)">••••${x.v.slice(-4)}</div></div><div><button class="btn" onclick="cp('${x.v}','Ключ скопирован')">Ключ</button> <button class="btn" onclick="delK(${i})">✕</button></div></div>`).join("")||`<div style="font-size:12px;color:var(--m)">Ключей пока нет</div>`;

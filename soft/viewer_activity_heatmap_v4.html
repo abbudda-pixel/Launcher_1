@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Тепловая карта активности зрителей</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2e;--line:#24304d;--text:#e8edf7;--muted:#9aa8c4;--accent:#5b8cff}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:18px 22px;border-bottom:1px solid var(--line)}
+h1{margin:0;font-size:20px}
+p.sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+main{padding:18px;display:grid;grid-template-columns:360px 1fr;gap:18px}
+@media(max-width:980px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.04em}
+input,textarea,select{width:100%;background:#0d1424;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:10px;font:inherit}
+textarea{min-height:150px;resize:vertical}
+button{margin-top:14px;width:100%;background:var(--accent);border:0;color:white;padding:11px;border-radius:10px;font-weight:650;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.hint{color:var(--muted);font-size:12px;margin-top:8px}
+#player{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+#player iframe,#player video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+#playerMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#9aa8c4;font-size:13px;z-index:2;background:#000}
+#openLink{display:none;margin-top:8px;font-size:12px}
+#openLink a{color:#8fb0ff}
+#heatmapWrap{position:relative;margin-top:14px}
+#heatmap{width:100%;height:330px;display:block;border-radius:10px;border:1px solid var(--line)}
+#cursor{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.75;pointer-events:none;display:none}
+.legend{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--muted)}
+#legendBar{height:10px;flex:1;border-radius:6px;background:linear-gradient(90deg,#0b1c3a,#1c5fa8,#f2c14e,#ef5b5b)}
+#wordList{margin-top:14px;max-height:250px;overflow:auto}
+.word-row{display:grid;grid-template-columns:1fr 72px;gap:10px;padding:7px 0;border-bottom:1px solid #1c2540;font-size:13px}
+.bar{height:8px;border-radius:5px;background:linear-gradient(90deg,#1c5fa8,#f2c14e,#ef5b5b)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:#0d1424;border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat b{display:block;font-size:18px}
+.stat span{font-size:11px;color:var(--muted)}
+#status{margin-top:10px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h1>Тепловая карта активности зрителей</h1>
+<p class="sub">Видео или трансляция + расшифровка речи → динамика интереса по времени и ключевым словам</p>
+</header>
+<main>
+<section class="card">
+<label>URL видео / трансляции</label>
+<input id="url" placeholder="YouTube, Rutube, VK Video или прямая ссылка">
+<label>Или видеофайл с компьютера</label>
+<input id="file" type="file" accept="video/*">
+<div class="hint">Локальный файл работает без интернета и блокировок.</div>
+<label>Расшифровка спикера</label>
+<textarea id="transcript" placeholder="00:00 Приветствие&#10;00:42 Обзор продукта&#10;01:30 Демонстрация"></textarea>
+<label>Данные активности зрителей (необязательно)</label>
+<textarea id="activity" placeholder="timestamp,viewers&#10;0,120&#10;30,180&#10;60,240"></textarea>
+<label>Тип источника</label>
+<select id="sourceType">
+<option value="auto">Определить автоматически</option>
+<option value="youtube">YouTube</option>
+<option value="rutube">Rutube</option>
+<option value="vk">VK Video</option>
+<option value="file">Прямой видеофайл / поток</option>
+</select>
+<button id="build">Построить тепловую карту</button>
+<button id="demo" class="ghost">Загрузить демо-данные</button>
+<div id="status"></div>
+</section>
+
+<section class="card">
+<div id="player"><div id="playerMsg">Вставьте ссылку или выберите файл и нажмите «Построить тепловую карту»</div></div>
+<div id="openLink"><a href="#" target="_blank" rel="noopener">Открыть видео на сайте источника ↗</a></div>
+<div id="heatmapWrap">
+<canvas id="heatmap"></canvas>
+<div id="cursor"></div>
+</div>
+<div class="legend"><span>Низкая</span><div id="legendBar"></div><span>Высокая</span></div>
+<div class="stats">
+<div class="stat"><b id="peakTime">—</b><span>Пик активности</span></div>
+<div class="stat"><b id="peakWord">—</b><span>Топ-слово</span></div>
+<div class="stat"><b id="coverage">—</b><span>Покрытие карты</span></div>
+</div>
+<h3 style="margin:18px 0 6px;font-size:15px">Ключевые слова</h3>
+<div id="wordList"></div>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+let player=null, data=null, words=[], currentEmbed=null, localUrl=null;
+
+function setMsg(text){
+  const box=$('player');
+  let msg=$('playerMsg');
+  if(!msg){ msg=document.createElement('div'); msg.id='playerMsg'; box.appendChild(msg); }
+  msg.textContent=text; msg.style.display='flex';
+}
+
+function setOpenLink(url){
+  const box=$('openLink');
+  if(url){ box.style.display='block'; box.querySelector('a').href=url; }
+  else box.style.display='none';
+}
+
+function parseTimestamps(text){
+  const out=[]; const re=/(\d{1,2}):(\d{2})(?::(\d{2}))?/g;
+  for(const line of text.split(/\n+/).filter(Boolean)){
+    const matches=[...line.matchAll(re)];
+    if(matches.length){
+      const mm=matches[0]; const sec=mm[3]?+mm[1]*3600+ +mm[2]*60+ +mm[3]:+mm[1]*60+ +mm[2];
+      const content=line.replace(re,'').replace(/^[\s\-–—>]+/,'').trim();
+      if(content) out.push({t:sec,text:content});
+    } else if(out.length){ out[out.length-1].text+=' '+line.trim(); }
+  }
+  return out;
+}
+
+function tokenize(text){
+  return text.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,' ').split(/\s+/)
+  .filter(w=>w.length>3 && !['это','для','как','что','так','или','если','чтобы','который','которые','очень','также','можно','когда','всё','все','быть','есть','был','была'].includes(w));
+}
+
+function parseActivity(text){
+  return text.trim().split(/\n+/).map(l=>l.split(/[,;\t]/).map(x=>parseFloat(x.trim())))
+  .filter(a=>a.length>=2 && !isNaN(a[0]) && !isNaN(a[1])).map(a=>({t:a[0],v:a[1]}));
+}
+
+function detectType(url){
+  if(/youtu\.?be|youtube\.com/i.test(url)) return 'youtube';
+  if(/rutube\.ru/i.test(url)) return 'rutube';
+  if(/vk\.com|vkvideo\.ru/i.test(url)) return 'vk';
+  return 'file';
+}
+
+function youtubeId(url){
+  const m=url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);
+  return m?m[1]:null;
+}
+
+function rutubeId(url){
+  const m=url.match(/(?:video|embed)\/([a-f0-9]{32})/i);
+  return m?m[1]:null;
+}
+
+function buildData(){
+  const cues=parseTimestamps($('transcript').value);
+  if(!cues.length){ $('status').textContent='Добавьте расшифровку с метками времени.'; return; }
+  const activity=parseActivity($('activity').value);
+  const end=Math.max(...cues.map(c=>c.t), activity.length?Math.max(...activity.map(a=>a.t)):0, 60);
+  const buckets=120, step=end/buckets;
+  const counts=Array(buckets).fill(0);
+  cues.forEach(c=>{ const i=Math.min(buckets-1,Math.floor(c.t/step)); counts[i]+=c.text.length; });
+  const wordCounts={};
+  cues.forEach(c=>tokenize(c.text).forEach(w=>wordCounts[w]=(wordCounts[w]||0)+1));
+  words=Object.entries(wordCounts).sort((a,b)=>b[1]-a[1]).slice(0,24)
+    .map(([word,count])=>({word,count,firstAt:cues.find(c=>tokenize(c.text).includes(word))?.t||0}));
+  let series;
+  if(activity.length){
+    series=Array(buckets).fill(0);
+    activity.forEach(a=>{ const i=Math.min(buckets-1,Math.floor(a.t/step)); series[i]=Math.max(series[i],a.v); });
+    const max=Math.max(...series,1); series=series.map(v=>v/max);
+  } else {
+    const max=Math.max(...counts,1);
+    series=counts.map((c,i)=>{
+      const local=cues.filter(c=>c.t>=i*step&&c.t<(i+1)*step);
+      const keywordBoost=local.reduce((s,c)=>s+tokenize(c.text).filter(w=>wordCounts[w]>1).length,0);
+      return Math.min(1,(c/max)*.65+Math.min(1,keywordBoost/8)*.35);
+    });
+  }
+  data={series,step,end,cues,activity};
+  drawHeatmap(); renderWords(); updateStats(); mountPlayer();
+  $('status').textContent='Карта построена. Наведите курсор на график, чтобы перейти к моменту видео.';
+}
+
+function color(v){
+  const stops=[[0,11,28,58],[.35,28,95,168],[.65,242,193,78],[1,239,91,91]];
+  for(let i=1;i<stops.length;i++){
+    if(v<=stops[i][0]){
+      const a=stops[i-1],b=stops[i],k=(v-a[0])/(b[0]-a[0]);
+      return `rgb(${Math.round(a[1]+(b[1]-a[1])*k)},${Math.round(a[2]+(b[2]-a[2])*k)},${Math.round(a[3]+(b[3]-a[3])*k)})`;
+    }
+  }
+  return 'rgb(239,91,91)';
+}
+
+function drawHeatmap(){
+  const canvas=$('heatmap'), ctx=canvas.getContext('2d');
+  const w=canvas.clientWidth*devicePixelRatio, h=330*devicePixelRatio;
+  canvas.width=w; canvas.height=h; ctx.clearRect(0,0,w,h);
+  const {series,step,end,cues}=data;
+  const cols=series.length, rows=words.length||1, cw=w/cols, ch=h/rows;
+  for(let r=0;r<rows;r++){
+    const word=words[r]?.word||'';
+    for(let c=0;c<cols;c++){
+      const base=series[c];
+      const local=cues.filter(q=>q.t>=c*step&&q.t<(c+1)*step).some(q=>tokenize(q.text).includes(word));
+      ctx.fillStyle=color(Math.min(1,base*(local?1.35:.55)));
+      ctx.fillRect(c*cw,r*ch,Math.ceil(cw),Math.ceil(ch));
+    }
+  }
+  ctx.fillStyle='rgba(232,237,247,.85)'; ctx.font=`${11*devicePixelRatio}px system-ui`;
+  words.forEach((wd,r)=>ctx.fillText(wd.word.slice(0,22),6*devicePixelRatio,(r+.68)*ch));
+  [0,.25,.5,.75,1].forEach(m=>{
+    const sec=m*end, mm=Math.floor(sec/60), ss=String(Math.floor(sec%60)).padStart(2,'0');
+    ctx.fillText(`${mm}:${ss}`,m*(w-40*devicePixelRatio)+6*devicePixelRatio,h-6*devicePixelRatio);
+  });
+}
+
+function renderWords(){
+  $('wordList').innerHTML=words.map(w=>`<div class="word-row"><div><b>${w.word}</b><div style="color:var(--muted);font-size:11px">упоминаний: ${w.count}</div></div><div class="bar"></div></div>`).join('');
+}
+
+function updateStats(){
+  const {series,step}=data;
+  const peak=series.indexOf(Math.max(...series));
+  $('peakTime').textContent=`${Math.floor(peak*step/60)}:${String(Math.floor(peak*step%60)).padStart(2,'0')}`;
+  $('peakWord').textContent=words[0]?.word||'—';
+  $('coverage').textContent=`${words.length} слов`;
+}
+
+function clearPlayer(){
+  player=null; currentEmbed=null;
+  $('player').innerHTML='<div id="playerMsg">Загрузка плеера…</div>';
+}
+
+function addIframe(src, allow){
+  clearPlayer();
+  const frame=document.createElement('iframe');
+  frame.src=src;
+  frame.allow=allow||'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  frame.allowFullscreen=true;
+  frame.referrerPolicy='strict-origin-when-cross-origin';
+  $('player').appendChild(frame);
+  $('playerMsg').style.display='none';
+  currentEmbed=frame;
+  return frame;
+}
+
+function playLocal(src){
+  clearPlayer();
+  const video=document.createElement('video');
+  video.controls=true; video.src=src; video.playsInline=true;
+  video.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#000';
+  video.onerror=()=>setMsg('Браузер не смог воспроизвести этот файл. Попробуйте MP4 (H.264) или WebM.');
+  $('player').appendChild(video);
+  $('playerMsg').style.display='none';
+  player={seekTo:t=>{video.currentTime=t;}};
+}
+
+function mountPlayer(){
+  const url=$('url').value.trim();
+  const file=$('file').files[0];
+  let type=$('sourceType').value;
+  if(type==='auto') type=detectType(url);
+
+  if(file){
+    if(localUrl) URL.revokeObjectURL(localUrl);
+    localUrl=URL.createObjectURL(file);
+    playLocal(localUrl); setOpenLink(null);
+    $('status').textContent='Воспроизводится локальный файл: '+file.name;
+    return;
+  }
+  if(!url){ setMsg('Вставьте ссылку на видео или выберите файл с компьютера.'); return; }
+
+  if(type==='youtube'){
+    const id=youtubeId(url);
+    if(!id){ setMsg('Не удалось распознать ID YouTube. Проверьте ссылку.'); return; }
+    const frame=addIframe(`https://www.youtube.com/embed/${id}?enablejsapi=1&rel=0&playsinline=1`);
+    player={seekTo:t=>frame.contentWindow.postMessage(JSON.stringify({event:'command',func:'seekTo',args:[t,true]}),'*')};
+    setOpenLink(`https://www.youtube.com/watch?v=${id}`);
+  } else if(type==='rutube'){
+    const id=rutubeId(url);
+    if(!id){ setMsg('Не удалось распознать ID Rutube. Проверьте ссылку.'); return; }
+    addIframe(`https://rutube.ru/play/embed/${id}`); player=null; setOpenLink(url);
+  } else if(type==='vk'){
+    const m=url.match(/video(-?\d+)_(\d+)/);
+    if(!m){ setMsg('Не удалось распознать ID VK Video. Проверьте ссылку.'); return; }
+    const key=(url.match(/[?&]access_key=([^&]+)/)||[])[1];
+    const src=`https://vk.com/video_ext.php?oid=${m[1]}&id=${m[2]}&hd=2${key?'&access_key='+encodeURIComponent(key):''}`;
+    addIframe(src); player=null; setOpenLink(url);
+  } else {
+    playLocal(url); setOpenLink(url);
+  }
+}
+
+$('heatmap').addEventListener('mousemove',e=>{
+  const rect=$('heatmap').getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width;
+  const cursor=$('cursor'); cursor.style.display='block'; cursor.style.left=(x*rect.width)+'px';
+  if(data&&player&&player.seekTo) player.seekTo(x*data.end);
+});
+$('heatmap').addEventListener('mouseleave',()=>$('cursor').style.display='none');
+$('build').onclick=buildData;
+$('file').onchange=()=>{ if($('file').files[0]) $('status').textContent='Файл выбран. Нажмите «Построить тепловую карту».'; };
+$('demo').onclick=()=>{
+  $('url').value='';
+  $('transcript').value=`00:00 Приветствие и тема вебинара\n00:35 Обзор рынка и основные проблемы\n01:20 Ключевая идея продукта\n02:05 Демонстрация интерфейса\n02:50 Интеграции и автоматизация\n03:30 Кейсы клиентов и результаты\n04:10 Тарифы и следующие шаги\n04:45 Вопросы и ответы`;
+  $('activity').value=`0,120\n30,180\n60,260\n90,340\n120,420\n150,310\n180,520\n210,410\n240,610\n270,380\n300,290`;
+  $('sourceType').value='auto'; buildData();
+};
+</script>
+</body>
+</html>
